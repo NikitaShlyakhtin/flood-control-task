@@ -1,0 +1,26 @@
+version: '3'
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      redis:
+        condition: service_healthy
+    command:
+      [
+        "sh",
+        "-c",
+        "./bin/floodcontrol -redis.addr=redis:6379 -limiter.n=${N_SECONDS_WINDOW} -limiter.k=${K_MAX_REQUESTS}"
+      ]
+    environment:
+      - REDIS_HOST=redis
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
